@@ -1,0 +1,16 @@
+{
+  "name": "ctrader-mobile-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/app.mjs --bundle --format=iife --platform=browser --outfile=app.bundle.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  },
+  "dependencies": {
+    "@spotware-web-team/sdk": "0.0.9",
+    "@spotware-web-team/sdk-external-api": "0.0.5"
+  }
+}
