@@ -11552,10 +11552,24 @@
     const L = (m) => {
       $("#log").textContent += (typeof m === "string" ? m : JSON.stringify(m)) + "\n";
     };
+    const sub = (obs, onNext) => {
+      try {
+        const s = obs && obs.subscribe ? obs.subscribe((v) => {
+          try {
+            onNext && onNext(v);
+          } finally {
+            s.unsubscribe && s.unsubscribe();
+          }
+        }, (err) => L("Error: " + (err?.message || err))) : null;
+        return s;
+      } catch (e) {
+        L("Subscribe error: " + (e.message || e));
+      }
+    };
     const adapter = createClientAdapter({});
-    handleConfirmEvent(adapter, {}).subscribe(() => {
+    handleConfirmEvent(adapter).subscribe(() => {
     });
-    registerEvent(adapter, {}).subscribe({
+    registerEvent(adapter).subscribe({
       next: () => {
         $("#status").textContent = "Connected";
         $("#account").disabled = false;
@@ -11565,12 +11579,12 @@
       error: (err) => L("registerEvent error: " + (err?.message || err))
     });
     $("#account").onclick = () => {
-      getAccountInformation(adapter, {}).subscribe((res) => L("AccountInformation: " + JSON.stringify(res)));
+      sub(getAccountInformation(adapter, {}), (res) => L("AccountInformation: " + JSON.stringify(res)));
     };
     $("#load").onclick = () => {
       const sel = $("#sym");
       sel.innerHTML = "";
-      getLightSymbolList(adapter, {}).subscribe((list) => {
+      sub(getLightSymbolList(adapter, {}), (list) => {
         const items = list?.items || list || [];
         items.slice(0, 300).forEach((s) => {
           const name = s?.symbolName || s?.name || s;
@@ -11603,7 +11617,7 @@
       const sym = $("#sym").value;
       if (!sym) return;
       try {
-        unsubscribeQuotes(adapter, { symbolName: sym }).subscribe(() => L("Unsubscribed " + sym));
+        sub(unsubscribeQuotes(adapter, { symbolName: sym }), () => L("Unsubscribed " + sym));
         if (qsub) {
           qsub.unsubscribe?.();
           qsub = null;
