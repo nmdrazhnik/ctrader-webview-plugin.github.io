@@ -4,6 +4,9 @@ on:
   push:
     branches: [ main, master ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,7 +24,7 @@ jobs:
           mkdir -p docs
           cp index.bundle.html docs/index.html
           cp test.html docs/test.html
-          cp app.bundle.js docs/app.bundle.js || true
+          cp app.bundle.js docs/app.bundle.js
           touch docs/.nojekyll
       - name: Commit /docs
         uses: stefanzweifel/git-auto-commit-action@v5
