@@ -1,853 +1,223 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-TF Confluence Scanner Pro - SDK Version</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Dark Theme (default) */
-        :root {
-            --bg-primary: #0d1117;
-            --bg-secondary: #161b22;
-            --bg-tertiary: #21262d;
-            --text-primary: #c9d1d9;
-            --text-secondary: #8b949e;
-            --text-dimmed: #6e7681;
-            --border: #30363d;
-            --bullish-3: #39d353;
-            --bullish-2: #2ea043;
-            --bullish-1: #1f6feb;
-            --neutral: #484f58;
-            --bearish-1: #fb8500;
-            --bearish-2: #da3633;
-            --bearish-3: #f85149;
-            --accent: #58a6ff;
-            --success: #3fb950;
-            --warning: #d29922;
-            --danger: #f85149;
-        }
-
-        /* Light Theme */
-        :root.light-theme {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f6f8fa;
-            --bg-tertiary: #ffffff;
-            --text-primary: #24292f;
-            --text-secondary: #57606a;
-            --text-dimmed: #8c959f;
-            --border: #d1d9e0;
-            --bullish-3: #1a7f37;
-            --bullish-2: #2da44e;
-            --bullish-1: #0969da;
-            --neutral: #afb8c1;
-            --bearish-1: #fb8500;
-            --bearish-2: #cf222e;
-            --bearish-3: #d1242f;
-            --accent: #0969da;
-            --success: #1a7f37;
-            --warning: #9a6700;
-            --danger: #cf222e;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-
-        .scanner-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        .scanner-header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header-title h1 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .connection-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 12px;
-            background: var(--bg-tertiary);
-            border-radius: 6px;
-            font-size: 12px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--danger);
-        }
-
-        .status-dot.connecting {
-            background: var(--warning);
-            animation: pulse 1s infinite;
-        }
-
-        .status-dot.connected {
-            background: var(--success);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.1); }
-        }
-
-        .scanner-main {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
-
-        .scanner-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .connection-banner {
-            background: var(--warning);
-            color: var(--bg-primary);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .connection-banner.success {
-            background: var(--success);
-        }
-
-        .connection-banner.error {
-            background: var(--danger);
-            color: white;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .control-panel {
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .control-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .control-btn {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-
-        .control-btn:hover:not(:disabled) {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-
-        .control-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .control-input {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            width: 60px;
-        }
-
-        select.control-input {
-            width: 140px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 16px;
-            border: 1px solid var(--border);
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-dimmed);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .stat-value.small {
-            font-size: 14px;
-        }
-
-        .quotes-container {
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .quotes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 12px;
-        }
-
-        .quote-card {
-            background: var(--bg-tertiary);
-            border-radius: 6px;
-            padding: 12px;
-            border: 1px solid var(--border);
-            transition: all 0.3s;
-        }
-
-        .quote-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent);
-        }
-
-        .quote-symbol {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .quote-prices {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
-
-        .quote-bid {
-            color: var(--bearish-2);
-            font-size: 12px;
-        }
-
-        .quote-ask {
-            color: var(--bullish-2);
-            font-size: 12px;
-        }
-
-        .quote-change {
-            font-size: 11px;
-            color: var(--text-dimmed);
-        }
-
-        .confluences-container {
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 16px;
-        }
-
-        .confluences-grid {
-            display: grid;
-            grid-template-columns: 120px repeat(auto-fit, minmax(80px, 1fr));
-            gap: 4px;
-        }
-
-        .grid-header {
-            background: var(--bg-tertiary);
-            padding: 8px;
-            font-size: 11px;
-            font-weight: 600;
-            text-align: center;
-            border-radius: 4px;
-            color: var(--text-secondary);
-        }
-
-        .grid-symbol {
-            background: var(--bg-tertiary);
-            padding: 8px;
-            font-weight: 600;
-            font-size: 12px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .confluence-cell {
-            background: var(--neutral);
-            padding: 8px;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .confluence-cell.bullish-strong {
-            background: var(--bullish-2);
-            color: white;
-        }
-
-        .confluence-cell.bullish-weak {
-            background: var(--bullish-1);
-            color: white;
-        }
-
-        .confluence-cell.bearish-weak {
-            background: var(--bearish-1);
-            color: white;
-        }
-
-        .confluence-cell.bearish-strong {
-            background: var(--bearish-2);
-            color: white;
-        }
-
-        .confluence-cell:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-
-        .log-panel {
-            width: 350px;
-            background: var(--bg-secondary);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 12px;
-        }
-
-        .log-header {
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .log-content {
-            flex: 1;
-            overflow-y: auto;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 11px;
-            line-height: 1.4;
-        }
-
-        .log-entry {
-            padding: 4px;
-            margin-bottom: 2px;
-            border-left: 2px solid var(--border);
-            word-wrap: break-word;
-        }
-
-        .log-entry.info {
-            border-left-color: var(--accent);
-        }
-
-        .log-entry.success {
-            border-left-color: var(--success);
-        }
-
-        .log-entry.warning {
-            border-left-color: var(--warning);
-            color: var(--warning);
-        }
-
-        .log-entry.error {
-            border-left-color: var(--danger);
-            color: var(--danger);
-        }
-
-        .error-message {
-            background: var(--danger);
-            color: white;
-            padding: 12px;
-            border-radius: 6px;
-            margin: 10px 0;
-            font-size: 12px;
-        }
-
-        .account-info {
-            background: var(--bg-tertiary);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            font-size: 12px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
-
-        .info-label {
-            color: var(--text-dimmed);
-        }
-
-        .info-value {
-            font-weight: 600;
-        }
-
-        .debug-panel {
-            background: var(--bg-tertiary);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 11px;
-            font-family: monospace;
-        }
-
-        .debug-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 4px;
-        }
-
-        .debug-label {
-            color: var(--text-dimmed);
-            min-width: 100px;
-        }
-
-        .debug-value {
-            color: var(--text-primary);
-        }
-
-        @media (max-width: 768px) {
-            .scanner-main {
-                flex-direction: column;
-            }
-            
-            .log-panel {
-                width: 100%;
-                height: 200px;
-                border-left: none;
-                border-top: 1px solid var(--border);
-            }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>cTrader WebView Plugin — Single File</title>
+  <style>
+    :root{
+      --bg:#0d1117;--fg:#e6edf3;--muted:#8b949e;
+      --card:#161b22;--card2:#0f141a;--accent:#58a6ff;--ok:#3fb950;--warn:#d29922;--err:#f85149;
+      --border:#30363d;
+    }
+    .light{ --bg:#ffffff; --fg:#24292f; --muted:#57606a; --card:#f6f8fa; --card2:#ffffff; --border:#d0d7de; --accent:#0969da; --ok:#1a7f37; --warn:#9a6700; --err:#cf222e;}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;display:flex;justify-content:center;align-items:center;padding:20px}
+    .app{width:min(920px,100%);}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--card2)}
+    header h1{font-size:16px;margin:0}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    @media (max-width:700px){.grid{grid-template-columns:1fr}}
+    .box{border:1px dashed var(--border);padding:12px;border-radius:12px;background:rgba(255,255,255,.02)}
+    .muted{color:var(--muted);font-size:12px}
+    button,select{appearance:none;background:var(--card2);border:1px solid var(--border);color:var(--fg);padding:10px 12px;border-radius:10px;cursor:pointer}
+    button[disabled]{opacity:.6;cursor:not-allowed}
+    .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border);background:transparent}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12px ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    #boot{padding:10px 12px;background:transparent;border-top:1px solid var(--border);max-height:180px;overflow:auto}
+    .kbd{font:11px ui-monospace,monospace;background:var(--card2);border:1px solid var(--border);padding:2px 6px;border-radius:6px}
+    a{color:var(--accent);text-decoration:none}
+  </style>
 </head>
 <body>
-    <!-- Enhanced diagnostic script -->
-    <script>
-        window.diagnostics = {
-            isEmbedded: window.self !== window.top,
-            url: window.location.href,
-            protocol: window.location.protocol,
-            queryParams: Object.fromEntries(new URLSearchParams(window.location.search)),
-            userAgent: navigator.userAgent,
-            messages: []
-        };
-
-        // Enhanced message monitoring
-        window.addEventListener('message', (e) => {
-            const msgData = {
-                timestamp: new Date().toISOString(),
-                origin: e.origin,
-                data: e.data,
-                type: e.data?.type || 'unknown'
-            };
-            window.diagnostics.messages.push(msgData);
-            console.log('[DIAG] Message received:', msgData);
-            
-            // Check for cTrader specific messages
-            if (e.data && typeof e.data === 'object') {
-                if (e.data.type === 'ctrader' || e.data.source === 'ctrader') {
-                    console.log('[DIAG] cTrader message detected!');
-                }
-            }
-        });
-
-        // Monitor postMessage sending
-        if (window.parent && window.parent !== window) {
-            const originalPostMessage = window.parent.postMessage;
-            window.parent.postMessage = function(...args) {
-                console.log('[DIAG] Sending message to parent:', args);
-                return originalPostMessage.apply(this, args);
-            };
-        }
-
-        console.log('[DIAG] Initial diagnostics:', window.diagnostics);
-    </script>
-
-    <div class="scanner-container">
-        <header class="scanner-header">
-            <div class="header-title">
-                <h1 id="headerTitle">Multi-TF Confluence Scanner Pro</h1>
-                <div class="connection-status">
-                    <div class="status-dot" id="statusDot"></div>
-                    <span id="statusText">Initializing...</span>
-                </div>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <select class="control-input" id="langSelector" style="width: 70px;">
-                    <option value="en">EN</option>
-                    <option value="es">ES</option>
-                    <option value="de">DE</option>
-                    <option value="fr">FR</option>
-                    <option value="ja">JA</option>
-                    <option value="zh">ZH</option>
-                </select>
-                <button class="control-btn" id="themeToggle" style="padding: 6px 12px;">🌙</button>
-            </div>
-        </header>
-
-        <div class="scanner-main">
-            <div class="scanner-content">
-                <!-- Debug Panel (only in development) -->
-                <div id="debugPanel" class="debug-panel" style="display: none;">
-                    <h4 style="margin-bottom: 8px;">Debug Information</h4>
-                    <div class="debug-row">
-                        <span class="debug-label">Embedded:</span>
-                        <span class="debug-value" id="debugEmbedded">--</span>
-                    </div>
-                    <div class="debug-row">
-                        <span class="debug-label">Account ID:</span>
-                        <span class="debug-value" id="debugAccountId">--</span>
-                    </div>
-                    <div class="debug-row">
-                        <span class="debug-label">Token:</span>
-                        <span class="debug-value" id="debugToken">--</span>
-                    </div>
-                    <div class="debug-row">
-                        <span class="debug-label">Locale:</span>
-                        <span class="debug-value" id="debugLocale">--</span>
-                    </div>
-                    <div class="debug-row">
-                        <span class="debug-label">Messages:</span>
-                        <span class="debug-value" id="debugMessages">0</span>
-                    </div>
-                </div>
-
-                <!-- Connection Banner -->
-                <div id="connectionBanner" class="connection-banner" style="display: none;">
-                    <div class="spinner" id="connectionSpinner"></div>
-                    <span id="connectionMessage">Connecting to cTrader...</span>
-                </div>
-
-                <!-- Control Panel -->
-                <div class="control-panel">
-                    <div class="control-row">
-                        <button class="control-btn" id="accountBtn" disabled>Get Account Info</button>
-                        <button class="control-btn" id="symbolsBtn" disabled>Load Symbols</button>
-                        <button class="control-btn" id="reconnectBtn" style="display: none;">Reconnect</button>
-                        <button class="control-btn" id="debugToggle">Toggle Debug</button>
-                    </div>
-                    <div class="control-row">
-                        <label>Symbol:</label>
-                        <select class="control-input" id="symbolSelect" disabled>
-                            <option value="">Select Symbol</option>
-                        </select>
-                        <button class="control-btn" id="subscribeBtn" disabled>Subscribe Quotes</button>
-                        <button class="control-btn" id="unsubscribeBtn" disabled>Unsubscribe</button>
-                    </div>
-                    <div class="control-row">
-                        <label>Volume:</label>
-                        <input type="number" class="control-input" id="volumeInput" value="100000" disabled>
-                        <button class="control-btn" id="buyBtn" disabled>Quick Buy</button>
-                        <button class="control-btn" id="sellBtn" disabled>Quick Sell</button>
-                    </div>
-                </div>
-
-                <!-- Account Info -->
-                <div id="accountInfoSection" style="display: none;">
-                    <div class="account-info" id="accountInfo"></div>
-                </div>
-
-                <!-- Stats Grid -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Active Symbols</div>
-                        <div class="stat-value" id="activeSymbols">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Subscribed Quotes</div>
-                        <div class="stat-value" id="subscribedQuotes">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Last Update</div>
-                        <div class="stat-value small" id="lastUpdate">--:--:--</div>
-                    </div>
-                </div>
-
-                <!-- Live Quotes -->
-                <div class="quotes-container">
-                    <h3 style="font-size: 14px; margin-bottom: 12px;">Live Quotes</h3>
-                    <div class="quotes-grid" id="quotesGrid">
-                        <div style="color: var(--text-dimmed); font-size: 12px;">No quotes subscribed</div>
-                    </div>
-                </div>
-
-                <!-- Confluence Analysis -->
-                <div class="confluences-container">
-                    <h3 style="font-size: 14px; margin-bottom: 12px;">Multi-Timeframe Confluence Analysis</h3>
-                    <div class="confluences-grid" id="confluenceGrid">
-                        <div style="color: var(--text-dimmed); font-size: 12px; grid-column: 1/-1;">Subscribe to symbols to see analysis</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Log Panel -->
-            <aside class="log-panel">
-                <div class="log-header">
-                    <span>SDK Logs</span>
-                    <button class="control-btn" style="padding: 4px 8px; font-size: 10px;" onclick="scanner.clearLogs()">Clear</button>
-                </div>
-                <div class="log-content" id="logContent"></div>
-            </aside>
+  <div class="app">
+    <div class="card">
+      <header>
+        <h1>cTrader WebView Plugin — Single File</h1>
+        <div class="row">
+          <span id="status" class="pill muted">Connecting…</span>
+          <button id="themeBtn" class="pill">Toggle Theme</button>
         </div>
+      </header>
+      <div style="padding:14px 16px">
+        <div class="grid">
+          <div class="box">
+            <div class="row" style="align-items:center;justify-content:space-between">
+              <div>
+                <div class="muted">Environment</div>
+                <div style="margin-top:6px">
+                  <div><span class="muted">Protocol:</span> <span id="proto"></span></div>
+                  <div><span class="muted">Lang:</span> <span id="lang"></span></div>
+                  <div><span class="muted">Platform:</span> <span id="platform"></span></div>
+                  <div><span class="muted">Placement:</span> <span id="placement"></span></div>
+                </div>
+              </div>
+              <div class="row">
+                <button id="btnAccount" disabled>Account info</button>
+                <button id="btnReconnect" class="warn">Reconnect</button>
+              </div>
+            </div>
+          </div>
+          <div class="box">
+            <div class="row" style="gap:8px;align-items:center">
+              <select id="symbol" disabled></select>
+              <button id="btnLoad" disabled>Load symbols</button>
+              <button id="btnSub" disabled>Subscribe</button>
+              <button id="btnUnsub" disabled>Unsubscribe</button>
+            </div>
+            <div style="margin-top:10px">
+              <div class="muted">Quote</div>
+              <pre id="quote">—</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="box" style="margin-top:12px">
+          <div class="muted">Log</div>
+          <pre id="log"></pre>
+        </div>
+      </div>
+      <div id="boot"><pre id="bootlog"></pre></div>
     </div>
+    <p class="muted" style="margin-top:8px">URL accepts <span class="kbd">?theme=dark|light</span>, <span class="kbd">lang=ru|en</span>, <span class="kbd">platform=ios|android|web</span>, <span class="kbd">placement=...</span>, <span class="kbd">symbol=...</span></p>
+  </div>
 
-    <script type="module">
-        // Use matching SDK versions to avoid conflicts
-        import { createClientAdapter } from 'https://esm.sh/@spotware-web-team/sdk-external-api@0.0.9';
-        import {
-            getAccountInformation,
-            getLightSymbolList,
-            subscribeQuotes,
-            unsubscribeQuotes,
-            createNewOrder,
-            quoteEvent,
-            executionEvent,
-            handleConfirmEvent,
-            registerEvent,
-            ServerInterfaces
-        } from 'https://esm.sh/@spotware-web-team/sdk@0.0.9';
-        import { take, tap, catchError, retry, timeout, of, throwError } from 'https://esm.sh/rxjs@7.8.2';
+  <!-- Bootloader + dynamic ESM import so we can show concrete errors in WebView -->
+  <script>
+    (function(){
+      const qs = new URLSearchParams(location.search);
+      const themeParam = (qs.get('theme')||'dark').toLowerCase();
+      const langParam = (qs.get('lang')||'en').toLowerCase();
+      const symbolParam = qs.get('symbol') || '';
+      const platform = qs.get('platform')||'ios';
+      const placement = qs.get('placement')||'';
+      const $ = (id)=>document.getElementById(id);
+      const L = (m)=>{ $('bootlog').textContent += (typeof m==='string'?m:JSON.stringify(m)) + '\\n'; };
+      const Log = (m)=>{ $('log').textContent += '['+new Date().toLocaleTimeString()+'] ' + (typeof m==='string'?m:JSON.stringify(m)) + '\\n'; };
+      $('proto').textContent = location.protocol;
+      $('lang').textContent = langParam;
+      $('platform').textContent = platform;
+      $('placement').textContent = placement;
+      if(themeParam === 'light'){ document.body.classList.add('light'); }
+      $('themeBtn').onclick = ()=> document.body.classList.toggle('light');
+      $('status').textContent = 'Booting…';
 
-        // Multi-language translations
-        const translations = {
-            en: {
-                title: 'Multi-TF Confluence Scanner Pro',
-                connecting: 'Connecting...',
-                connected: 'Connected',
-                disconnected: 'Disconnected',
-                reconnect: 'Reconnect',
-                accountBtn: 'Get Account Info',
-                symbolsBtn: 'Load Symbols',
-                selectSymbol: 'Select Symbol',
-                subscribeBtn: 'Subscribe Quotes',
-                unsubscribeBtn: 'Unsubscribe',
-                volume: 'Volume',
-                quickBuy: 'Quick Buy',
-                quickSell: 'Quick Sell',
-                activeSymbols: 'Active Symbols',
-                subscribedQuotes: 'Subscribed Quotes',
-                lastUpdate: 'Last Update',
-                liveQuotes: 'Live Quotes',
-                noQuotes: 'No quotes subscribed',
-                confluenceAnalysis: 'Multi-Timeframe Confluence Analysis',
-                subscribeForAnalysis: 'Subscribe to symbols to see analysis',
-                sdkLogs: 'SDK Logs',
-                clear: 'Clear',
-                accountId: 'Account ID',
-                balance: 'Balance',
-                equity: 'Equity',
-                freeMargin: 'Free Margin',
-                leverage: 'Leverage',
-                spread: 'Spread',
-                connectingMessage: 'Connecting to cTrader...',
-                connectedMessage: 'Successfully connected to cTrader!',
-                retryingMessage: 'Connection attempt failed. Retrying...',
-                failedMessage: 'Unable to connect. Click Reconnect to try again.'
-            },
-            es: {
-                title: 'Escáner de Confluencia Multi-TF Pro',
-                connecting: 'Conectando...',
-                connected: 'Conectado',
-                disconnected: 'Desconectado',
-                reconnect: 'Reconectar',
-                accountBtn: 'Obtener Info Cuenta',
-                symbolsBtn: 'Cargar Símbolos',
-                selectSymbol: 'Seleccionar Símbolo',
-                subscribeBtn: 'Suscribir Cotizaciones',
-                unsubscribeBtn: 'Desuscribir',
-                volume: 'Volumen',
-                quickBuy: 'Compra Rápida',
-                quickSell: 'Venta Rápida',
-                activeSymbols: 'Símbolos Activos',
-                subscribedQuotes: 'Cotizaciones Suscritas',
-                lastUpdate: 'Última Actualización',
-                liveQuotes: 'Cotizaciones en Vivo',
-                noQuotes: 'Sin cotizaciones suscritas',
-                confluenceAnalysis: 'Análisis de Confluencia Multi-Temporal',
-                subscribeForAnalysis: 'Suscríbase a símbolos para ver el análisis',
-                sdkLogs: 'Registros SDK',
-                clear: 'Limpiar',
-                accountId: 'ID de Cuenta',
-                balance: 'Balance',
-                equity: 'Patrimonio',
-                freeMargin: 'Margen Libre',
-                leverage: 'Apalancamiento',
-                spread: 'Spread',
-                connectingMessage: 'Conectando a cTrader...',
-                connectedMessage: '¡Conectado exitosamente a cTrader!',
-                retryingMessage: 'Intento de conexión fallido. Reintentando...',
-                failedMessage: 'No se pudo conectar. Haga clic en Reconectar para intentar de nuevo.'
-            }
-        };
+      // Basic i18n strings
+      const i18n = {
+        en:{ connected:'Connected', disconnected:'Disconnected', importing:'Importing SDK…', importFail:'Import failed — bundle locally', handshake:'Handshaking…', subscribed:'Subscribed', unsubscribed:'Unsubscribed' },
+        ru:{ connected:'Подключено', disconnected:'Отключено', importing:'Загружаем SDK…', importFail:'Импорт не удался — соберите локальный бандл', handshake:'Рукопожатие…', subscribed:'Подписка активна', unsubscribed:'Подписка снята' }
+      };
+      const T = (k)=> (i18n[langParam]||i18n.en)[k] || k;
 
-        class ConfluenceScanner {
-            constructor() {
-                this.adapter = null;
-                this.connected = false;
-                this.eventsSubscribed = false;
-                this.connectionAttempts = 0;
-                this.maxAttempts = 5;
-                this.retryDelay = 2000;
-                this.symbols = new Map();
-                this.subscribedSymbols = new Set();
-                this.quotes = new Map();
-                this.confluences = new Map();
-                this.timeframes = ['1m', '5m', '15m', '1H', '4H', '1D'];
-                this.accountInfo = null;
-                this.currentLang = localStorage.getItem('scannerLang') || 'en';
-                this.currentTheme = localStorage.getItem('scannerTheme') || 'dark';
-                this.t = translations[this.currentLang] || translations.en;
-                this.debugMode = false;
-                this.connectionTimeout = null;
-                
-                // Parse cTrader query parameters
-                this.queryParams = new URLSearchParams(window.location.search);
-                this.accountId = this.queryParams.get('accountId');
-                this.token = this.queryParams.get('token');
-                this.locale = this.queryParams.get('locale');
-                
-                this.init();
-            }
+      window.addEventListener('error', e=>L('ERROR: '+e.message));
+      window.addEventListener('unhandledrejection', e=>L('REJECTION: '+(e.reason?.message||e.reason)));
 
-            init() {
-                this.applyTheme();
-                this.applyTranslations();
-                this.setupEventListeners();
-                this.updateDebugPanel();
-                
-                // Enhanced environment logging
-                console.group('Scanner Initialization');
-                console.log('Environment:', {
-                    embedded: window.self !== window.top,
-                    url: window.location.href,
-                    protocol: window.location.protocol,
-                    queryParams: Object.fromEntries(this.queryParams),
-                    accountId: this.accountId,
-                    token: this.token ? 'present' : 'missing',
-                    locale: this.locale
-                });
-                console.groupEnd();
-                
-                this.log('Scanner initialized', 'info');
-                this.log(`Environment: ${window.self !== window.top ? 'WebView' : 'Browser'}`, 'info');
-                
-                if (this.accountId && this.token) {
-                    this.log(`Account: ${this.accountId}, Locale: ${this.locale || 'default'}`, 'info');
-                }
-                
-                // Handle visibility changes for mobile bottom sheets
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible') {
-                        this.log('App became visible', 'info');
-                        if (!this.connected && this.adapter) {
-                            this.log('Attempting to restore connection...', 'info');
-                            this.sendConfirm();
-                        }
-                    } else {
-                        this.log('App became hidden', 'info');
-                    }
-                });
-                
-                // Monitor focus events
-                window.addEventListener('focus', () => {
-                    this.log('Window gained focus', 'info');
-                });
-                
-                window.addEventListener('blur', () => {
-                    this.log('Window lost focus', 'info');
-                });
-                
-                // Auto-connect with delay
-                this.showConnectionBanner('connecting');
-                setTimeout(() => {
-                    this.connect();
-                }, 500);
-            }
+      (async function main(){
+        L(T('importing'));
+        try{
+          const [{ createClientAdapter }, sdk] = await Promise.all([
+            import('https://esm.sh/@spotware-web-team/sdk-external-api@0.0.9'),
+            import('https://esm.sh/@spotware-web-team/sdk@0.0.9')
+          ]);
 
-            updateDebugPanel() {
-                if (!this.debugMode) return;
-                
-                document.getElementById('debugEmbedded').textContent = window.self !== window.top ? 'Yes' : 'No';
-                document.getElementById('debugAccountId').textContent = this.accountId || 'N/A';
-                document.getElementById('debugToken').textContent = this.token ? '***' + this.token.slice(-4) : 'N/A';
-                document.getElementById('debugLocale').textContent = this.locale || 'default';
-                document.getElementById('debugMessages').textContent = window.diagnostics.messages.length;
-            }
+          L(T('handshake'));
+          const adapter = createClientAdapter({});
+          let connected = false;
 
-            toggleDebug() {
-                this.debugMode = !
+          // Confirm responder (one-shot is fine)
+          const confirmSub = sdk.handleConfirmEvent(adapter, {}).subscribe(()=>{});
+
+          const setStatus = (ok)=>{
+            $('status').textContent = ok ? T('connected') : T('disconnected');
+            $('status').className = 'pill ' + (ok?'ok':'');
+          };
+
+          const onConnected = ()=>{
+            connected = true;
+            setStatus(true);
+            Log('Connected to host');
+            $('btnAccount').disabled = false;
+            $('btnLoad').disabled = false;
+          };
+
+          sdk.registerEvent(adapter, {}).subscribe({ next: onConnected, error: err=>Log('registerEvent error: '+(err?.message||err)) });
+
+          // UI handlers
+          $('btnReconnect').onclick = ()=>{
+            Log('Manual reconnect');
+            setStatus(false);
+            sdk.registerEvent(adapter, {}).subscribe({ next: onConnected, error: err=>Log('registerEvent error: '+(err?.message||err)) });
+          };
+
+          $('btnAccount').onclick = ()=>{
+            try{
+              sdk.getAccountInformation(adapter, {}).subscribe((res)=>{
+                Log('AccountInformation: '+JSON.stringify(res));
+              });
+            }catch(e){ Log('getAccountInformation error: '+(e.message||e)); }
+          };
+
+          const $symbol = $('symbol');
+          $('btnLoad').onclick = ()=>{
+            $symbol.innerHTML = '';
+            sdk.getLightSymbolList(adapter, {}).subscribe((list)=>{
+              // list.items ? depends on SDK; try both
+              const items = list?.items || list || [];
+              items.slice(0,500).forEach(s=>{
+                const name = s?.symbolName || s?.name || s;
+                if(!name) return;
+                const opt = document.createElement('option');
+                opt.value = name; opt.textContent = name;
+                $symbol.appendChild(opt);
+              });
+              $symbol.disabled = false;
+              $('btnSub').disabled = false;
+              $('btnUnsub').disabled = false;
+              if(symbolParam){ $symbol.value = symbolParam; }
+              Log('Symbols loaded: '+$symbol.options.length);
+            });
+          };
+
+          let quoteSub = null;
+          $('btnSub').onclick = ()=>{
+            const sym = $symbol.value;
+            if(!sym) return;
+            if(quoteSub){ quoteSub.unsubscribe?.(); quoteSub = null; }
+            // Subscribe + listen to quotes
+            sdk.subscribeQuotes(adapter, { symbolName: sym }).subscribe(()=>{
+              Log(T('subscribed')+': '+sym);
+            });
+            quoteSub = sdk.quoteEvent(adapter, { symbolName: sym }).subscribe((q)=>{
+              $('quote').textContent = JSON.stringify(q, null, 2);
+            });
+          };
+
+          $('btnUnsub').onclick = ()=>{
+            const sym = $symbol.value;
+            if(!sym) return;
+            try{
+              sdk.unsubscribeQuotes(adapter, { symbolName: sym }).subscribe(()=>{
+                Log(T('unsubscribed')+': '+sym);
+              });
+              if(quoteSub){ quoteSub.unsubscribe?.(); quoteSub = null; }
+            }catch(e){ Log('unsubscribe error: '+(e.message||e)); }
+          };
+
+          // Prefetch if symbol set via URL
+          if(symbolParam){ $('btnLoad').click(); }
+
+        }catch(err){
+          L(T('importFail')+': '+(err?.message||err));
+          $('status').textContent = 'SDK import failed'; $('status').className = 'pill err';
+          // show hint in page log too
+          document.getElementById('log').textContent =
+            'SDK import failed. If WebView blocks external ESM, build a local bundle (see README).';
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>
