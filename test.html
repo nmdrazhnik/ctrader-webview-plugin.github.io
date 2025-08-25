@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cTrader WebView Test</title>
+    <style>
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .info {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #log {
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            min-height: 100px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <h2>cTrader WebView Test</h2>
+    
+    <div class="info">
+        <strong>Environment Check:</strong><br>
+        <div id="envInfo">Loading...</div>
+    </div>
+    
+    <button class="button" onclick="testLog()">Test Logging</button>
+    <button class="button" onclick="testMessage()">Test Message</button>
+    <button class="button" onclick="clearLog()">Clear Log</button>
+    
+    <div id="log"></div>
+    
+    <script>
+        // Simple logging function
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logDiv.appendChild(entry);
+            console.log(msg);
+        }
+        
+        // Check environment
+        function checkEnvironment() {
+            const info = document.getElementById('envInfo');
+            const params = new URLSearchParams(window.location.search);
+            
+            info.innerHTML = `
+                • In iframe: ${window.self !== window.top}<br>
+                • Protocol: ${window.location.protocol}<navigable<br>
+                • URL params: ${params.toString() || 'none'}<br>
+                • Account ID: ${params.get('accountId') || 'not provided'}<br>
+                • Token: ${params.get('token') ? 'present' : 'not provided'}<br>
+                • JavaScript: working ✓
+            `;
+            
+            log('Environment checked');
+        }
+        
+        // Test functions
+        function testLog() {
+            log('Button clicked - JavaScript is working!');
+        }
+        
+        function testMessage() {
+            log('Attempting to send message to parent...');
+            
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'test',
+                    message: 'Hello from WebView plugin',
+                    timestamp: Date.now()
+                }, '*');
+                log('Message sent to parent window');
+            } else {
+                log('No parent window detected');
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            log('Log cleared');
+        }
+        
+        // Listen for messages
+        window.addEventListener('message', function(e) {
+            log(`Received message: ${JSON.stringify(e.data)}`);
+        });
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', function() {
+            log('Page loaded');
+            checkEnvironment();
+            
+            // Try basic SDK setup
+            log('Attempting to load SDK...');
+            
+            // Simple test without full SDK
+            setTimeout(() => {
+                log('Basic plugin ready');
+            }, 1000);
+        });
+        
+        // Catch any errors
+        window.addEventListener('error', function(e) {
+            log(`ERROR: ${e.message}`);
+        });
+    </script>
+</body>
+</html>
